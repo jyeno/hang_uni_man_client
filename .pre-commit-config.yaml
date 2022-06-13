@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.1.1
+    hooks:
+      - id: clang-format
+        args: [-i]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+    - id: check-xml
+    - id: end-of-file-fixer
+    - id: mixed-line-ending
+    - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: qmlformat
+        name: qmlformat
+        entry: /usr/lib/qt6/bin/qmlformat -i
+        pass_filenames: true
+        require_serial: true
+        language: system
+        types: [text]
+        files: ^.*\.qml$
