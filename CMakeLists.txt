@@ -10,8 +10,7 @@ set(CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.3
-    COMPONENTS Core Gui Quick QuickControls2
-    REQUIRED
+	COMPONENTS Core Gui Svg Quick QuickControls2 REQUIRED
 )
 
 add_subdirectory(src)

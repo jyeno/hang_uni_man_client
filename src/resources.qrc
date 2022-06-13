@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file alias="Main.qml">ui/Main.qml</file>
+        <file alias="background.svg">res/background.svg</file>
     </qresource>
 </RCC>
