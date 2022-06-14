@@ -12,18 +12,23 @@ ApplicationWindow {
         source: "background"
     }
 
-    StackView {
-        id: stackView
+    Component {
+        id: gameComponent
 
-        anchors.fill: parent
+        Game {
+        }
+    }
+
+    Component {
+        id: initialMenuComponent
 
         Item {
-            anchors.fill: parent
             ColumnLayout {
                 anchors.centerIn: parent
                 Button {
                     Layout.fillWidth: true
                     text: "play solo"
+                    onClicked: stack.push(gameComponent)
                 }
                 Button {
                     Layout.fillWidth: true
@@ -53,6 +58,13 @@ ApplicationWindow {
         }
     }
 
+    StackView {
+        id: stack
+
+        initialItem: initialMenuComponent
+        anchors.fill: parent
+    }
+
     Dialog {
         id: usernameDialog
 
@@ -60,6 +72,7 @@ ApplicationWindow {
         anchors.centerIn: Overlay.overlay
         modal: true
         closePolicy: Popup.NoAutoClose
+        onOpened: usernameTextField.forceActiveFocus()
         onAccepted: {
             // TODO validation
             console.log("login was successful? " + Core.login(usernameTextField.text));

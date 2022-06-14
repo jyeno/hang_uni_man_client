@@ -1,6 +1,9 @@
 <RCC>
     <qresource prefix="/">
         <file alias="Main.qml">ui/Main.qml</file>
+        <file alias="Game.qml">ui/Game.qml</file>
+        <file alias="Keyboard.qml">ui/Keyboard.qml</file>
+        <file alias="HiddenWord.qml">ui/HiddenWord.qml</file>
         <file alias="background.svg">res/background.svg</file>
     </qresource>
 </RCC>

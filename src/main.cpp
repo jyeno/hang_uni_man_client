@@ -8,7 +8,6 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("Material");
 
     QQmlApplicationEngine engine;
-    engine.addImportPath(u"qrc:/"_qs);
     const QUrl url { u"qrc:/Main.qml"_qs };
     QObject::connect(
             &engine, &QQmlApplicationEngine::objectCreated, &app,
