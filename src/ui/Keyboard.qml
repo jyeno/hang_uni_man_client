@@ -1,9 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import br.uni.hangman
 
 Item {
     id: keyboard
+    // TODO disable keyboard while not the current player
+    enabled: true
+
     implicitWidth: 300
     implicitHeight: 200
 
@@ -34,8 +38,8 @@ Item {
                     text: modelData.text
                     width: modelData.width * keyboard.width / columns - rowSpacing
                     height: keyboard.height / rows - columnSpacing
-
-                    // onClicked: root.clicked(text)
+                    enabled: !Core.data.letters_guessed.includes(modelData.text)
+                    onClicked: Core.gameGuessLetter(text[0])
                 }
             }
         }
@@ -62,8 +66,8 @@ Item {
                     text: modelData.text
                     width: modelData.width * keyboard.width / columns - rowSpacing
                     height: keyboard.height / rows - columnSpacing
-
-                    // onClicked: root.clicked(text)
+                    enabled: !Core.data.letters_guessed.includes(modelData.text)
+                    onClicked: Core.gameGuessLetter(text[0])
                 }
             }
         }
@@ -88,8 +92,8 @@ Item {
                     text: modelData.text
                     width: modelData.width * keyboard.width / columns - rowSpacing
                     height: keyboard.height / rows - columnSpacing
-
-                    // onClicked: root.clicked(text)
+                    enabled: !Core.data.letters_guessed.includes(modelData.text)
+                    onClicked: Core.gameGuessLetter(text[0])
                 }
             }
         }
