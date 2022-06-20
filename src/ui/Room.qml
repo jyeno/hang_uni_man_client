@@ -14,11 +14,14 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         Label {
+            font.pixelSize: 20
+            Layout.alignment: Qt.AlignHCenter
             text: qsTr("Difficulty: ") + Core.data.difficulty
         }
 
         Label {
             Layout.alignment: Qt.AlignHCenter
+            font.pixelSize: 20
             text: qsTr("Members (") + Core.data.players.length + "/" + Core.data.max_players + qsTr(")")
         }
 
@@ -73,7 +76,8 @@ Item {
             }
         }
         Button {
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
             text: qsTr("Start Game!")
             onClicked: Core.startGame(Core.PlayModality.Multiplayer)
         }
@@ -95,27 +99,58 @@ Item {
                     id: messagesModel
                 }
                 delegate: Label {
+                    font.pixelSize: 20
+                    wrapMode: Text.Wrap
                     text: "[" + owner + "]: " + message
                 }
             }
             RowLayout {
                 Layout.fillWidth: true
 
+                function sendMessageAndResetText() {
+                    Core.sendRoomMessage(messageTextField.text);
+                    messageTextField.text = "";
+                }
+
                 TextField {
                     id: messageTextField
                     Layout.fillWidth: true
                     placeholderText: qsTr("Type your message...")
+                    onAccepted: sendMessageAndResetText()
                 }
 
                 ToolButton {
                     text: qsTr("Send")
                     enabled: messageTextField.text !== ""
-                    onClicked: {
-                        Core.sendRoomMessage(messageTextField.text);
-                        messageTextField.text = "";
-                    }
+                    onClicked: sendMessageAndResetText()
                 }
             }
         }
+    }
+
+    Dialog {
+        id: backToMenuDialog
+
+        anchors.centerIn: Overlay.overlay
+        title: "Back to main menu"
+        onAccepted: {
+            Core.exitRoom();
+            stack.pop(null);
+        }
+
+        Label {
+            text: "Do you want to exit this room and go back to main menu?"
+        }
+
+        standardButtons: Dialog.Ok | Dialog.Cancel
+    }
+
+    ToolButton {
+        text: "X"
+        anchors {
+            left: parent.left
+            top: parent.top
+        }
+        onClicked: backToMenuDialog.open()
     }
 }

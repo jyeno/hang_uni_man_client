@@ -108,66 +108,67 @@ void Core::handleRequest()
     // TODO change server to have more events, then they can be handled here
     if (dataReceived.contains("error")) {
         emit errorHappened(dataReceived["error"].toString());
+        return;
 
     } else if (dataReceived["event"] == "RoomListChanged") {
         emit roomListChanged(dataReceived["data"].toArray());
 
     } else if (dataReceived["event"] == "RoomMessageReceived") {
         emit roomMessageReceived(dataReceived["data"].toObject());
-    }
+    } else {
+        const auto metadata { dataReceived["data"].toObject() };
 
-    const auto metadata { dataReceived["data"].toObject() };
-
-    const auto datamap = metadata.toVariantMap(); // populating the data used on the current screen
-    for (auto keyValueIterator = datamap.constBegin(); keyValueIterator != datamap.constEnd();
-         keyValueIterator++) {
-        _data->insert(keyValueIterator.key(), keyValueIterator.value());
-    }
-
-    if (dataReceived["event"] == "PlayerCreated") {
-        _userName = metadata["name"].toString();
-        _userIdentifier = metadata["uid"].toString();
-        emit playerCreated(_userName);
-
-    } else if (dataReceived["event"] == "RoomCreated") {
-        _roomIdentifier = metadata["uid"].toString();
-        if (_playModality != PlayModality::Solo) {
-            emit roomCreated(metadata);
-        } else { // room is ready, then start the solo play
-            startGame(_playModality);
+        const auto datamap = metadata.toVariantMap(); // populating the data used on the current screen
+        for (auto keyValueIterator = datamap.constBegin(); keyValueIterator != datamap.constEnd();
+             keyValueIterator++) {
+            _data->insert(keyValueIterator.key(), keyValueIterator.value());
         }
-    } else if (dataReceived["event"] == "RoomChanged") {
-        emit dataChanged(_data);
-        emit roomChanged(metadata);
 
-    } else if (dataReceived["event"] == "RoomExited") {
-        _roomIdentifier = "";
-        resetData();
+        if (dataReceived["event"] == "PlayerCreated") {
+            _userName = metadata["name"].toString();
+            _userIdentifier = metadata["uid"].toString();
+            emit playerCreated(_userName);
 
-    } else if (dataReceived["event"] == "GameStarted") {
-        _roomIdentifier = ""; // room doesnt exist anymore as the game started
+        } else if (dataReceived["event"] == "RoomCreated") {
+            _roomIdentifier = metadata["uid"].toString();
+            if (_playModality != PlayModality::Solo) {
+                emit roomCreated(metadata);
+            } else { // room is ready, then start the solo play
+                startGame(_playModality);
+            }
+        } else if (dataReceived["event"] == "RoomChanged") {
+            emit dataChanged(_data);
+            emit roomChanged(metadata);
 
-        _gameIdentifier = metadata["uid"].toString();
-        emit gameStarted(metadata);
+        } else if (dataReceived["event"] == "RoomExited") {
+            _roomIdentifier = "";
+            resetData();
 
-    } else if (dataReceived["event"] == "GameChanged") {
-        emit dataChanged(_data);
+        } else if (dataReceived["event"] == "GameStarted") {
+            _roomIdentifier = ""; // room doesnt exist anymore as the game started
 
-    } else if (dataReceived["event"] == "GameFinished") {
-        _gameIdentifier = "";
-        _playModality = PlayModality::Multiplayer;
-        emit dataChanged(_data);
-        emit gameFinished(metadata);
+            _gameIdentifier = metadata["uid"].toString();
+            emit gameStarted(metadata);
 
-    } else if (dataReceived["event"] == "PlayerEliminated") {
-        _gameIdentifier = "";
-        _playModality = PlayModality::Multiplayer;
-        emit playerEliminated();
+        } else if (dataReceived["event"] == "GameChanged") {
+            emit dataChanged(_data);
 
-    } else if (dataReceived["event"] == "GameExited") {
-        _gameIdentifier = "";
-        _playModality = PlayModality::Multiplayer;
-        resetData();
+        } else if (dataReceived["event"] == "GameFinished") {
+            _gameIdentifier = "";
+            _playModality = PlayModality::Multiplayer;
+            emit dataChanged(_data);
+            emit gameFinished(metadata);
+
+        } else if (dataReceived["event"] == "PlayerEliminated") {
+            _gameIdentifier = "";
+            _playModality = PlayModality::Multiplayer;
+            emit playerEliminated();
+
+        } else if (dataReceived["event"] == "GameExited") {
+            _gameIdentifier = "";
+            _playModality = PlayModality::Multiplayer;
+            resetData();
+        }
     }
 
     qDebug() << "metadata: " << dataReceived << "\n";
