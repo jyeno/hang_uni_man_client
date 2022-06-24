@@ -15,11 +15,13 @@ class Core : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQmlPropertyMap *data MEMBER _data NOTIFY dataChanged)
+    Q_PROPERTY(int playerIndex MEMBER _playerIndex NOTIFY playerIndexChanged)
     QML_ELEMENT
     QML_SINGLETON
 
 public:
     explicit Core(QObject *parent = nullptr);
+    ~Core();
 
     enum class PlayModality { Solo, Multiplayer };
     Q_ENUM(PlayModality)
@@ -42,6 +44,7 @@ public:
 
 Q_SIGNALS:
     void playerCreated(const QString &name);
+    void playerIndexChanged(int index);
     void roomListChanged(const QJsonArray &array);
     void gameStarted(const QJsonObject &metadata);
     void gameChanged(const QJsonObject &metadata);
@@ -49,12 +52,14 @@ Q_SIGNALS:
     void roomCreated(const QJsonObject &metadata);
     void roomChanged(const QJsonObject &metadata);
     void roomMessageReceived(const QJsonObject &metadata);
+    void roomDeleted();
     void playerEliminated();
     void dataChanged(const QQmlPropertyMap *map);
     void errorHappened(const QString &error);
     void serverUnavailable();
 
 private:
+    void gamePlayerIndex();
     void handleRequest();
 
     PlayModality _playModality;
@@ -64,6 +69,7 @@ private:
     QString _gameIdentifier;
     QTcpSocket *_socket;
     QQmlPropertyMap *_data;
+    int _playerIndex;
 };
 
 #endif // CORE_H_

@@ -7,7 +7,8 @@
 Core::Core(QObject *parent)
     : _socket(new QTcpSocket(this)),
       _playModality { PlayModality::Multiplayer },
-      _data { new QQmlPropertyMap(this) }
+      _data { new QQmlPropertyMap(this) },
+      _playerIndex { 0 }
 {
     if (_socket->bind()) {
         _socket->connectToHost("127.0.0.1", 8080);
@@ -19,8 +20,14 @@ Core::Core(QObject *parent)
         });
     } else {
         qDebug() << "error, couldnt reserve socket";
-        // abort application
     }
+}
+
+Core::~Core()
+{
+    logout();
+    _socket->disconnectFromHost();
+    _socket->close();
 }
 
 void Core::resetData()
@@ -85,6 +92,11 @@ void Core::startGame(PlayModality modality)
     }
 }
 
+void Core::gamePlayerIndex()
+{
+    _socket->write(u"game player_index %1 %2"_qs.arg(_gameIdentifier).arg(_userIdentifier).toUtf8());
+}
+
 void Core::exitGame()
 {
     _socket->write(u"game exit %1 %2"_qs.arg(_gameIdentifier).arg(_userIdentifier).toUtf8());
@@ -105,7 +117,7 @@ void Core::gameGuessWord(const QString &guessed)
 void Core::handleRequest()
 {
     auto dataReceived { QJsonDocument::fromJson(_socket->readAll()).object() };
-    // TODO change server to have more events, then they can be handled here
+    qDebug() << "metadata: " << dataReceived << "\n";
     if (dataReceived.contains("error")) {
         emit errorHappened(dataReceived["error"].toString());
         return;
@@ -115,6 +127,21 @@ void Core::handleRequest()
 
     } else if (dataReceived["event"] == "RoomMessageReceived") {
         emit roomMessageReceived(dataReceived["data"].toObject());
+        return;
+
+    } else if (dataReceived["event"] == "PlayerIndexFound") {
+        _playerIndex = dataReceived["data"].toObject()["player_index"].toInt();
+        emit playerIndexChanged(_playerIndex);
+        return;
+
+    } else if (dataReceived["event"] == "GameExited") {
+        _gameIdentifier = "";
+        _playModality = PlayModality::Multiplayer;
+        _playerIndex = 0;
+
+    } else if (dataReceived["event"] == "RoomExited") {
+        _roomIdentifier = "";
+
     } else {
         const auto metadata { dataReceived["data"].toObject() };
 
@@ -136,40 +163,39 @@ void Core::handleRequest()
             } else { // room is ready, then start the solo play
                 startGame(_playModality);
             }
+        } else if (dataReceived["event"] == "RoomDeleted") {
+            _roomIdentifier = "";
+            emit roomDeleted();
+
         } else if (dataReceived["event"] == "RoomChanged") {
             emit dataChanged(_data);
             emit roomChanged(metadata);
-
-        } else if (dataReceived["event"] == "RoomExited") {
-            _roomIdentifier = "";
-            resetData();
 
         } else if (dataReceived["event"] == "GameStarted") {
             _roomIdentifier = ""; // room doesnt exist anymore as the game started
 
             _gameIdentifier = metadata["uid"].toString();
+            emit dataChanged(_data);
             emit gameStarted(metadata);
+            gamePlayerIndex();
 
         } else if (dataReceived["event"] == "GameChanged") {
             emit dataChanged(_data);
-
-        } else if (dataReceived["event"] == "GameFinished") {
-            _gameIdentifier = "";
-            _playModality = PlayModality::Multiplayer;
-            emit dataChanged(_data);
-            emit gameFinished(metadata);
+            emit gameChanged(metadata);
 
         } else if (dataReceived["event"] == "PlayerEliminated") {
             _gameIdentifier = "";
             _playModality = PlayModality::Multiplayer;
             emit playerEliminated();
 
-        } else if (dataReceived["event"] == "GameExited") {
+        } else if (dataReceived["event"] == "GameFinished") {
             _gameIdentifier = "";
             _playModality = PlayModality::Multiplayer;
-            resetData();
+            emit gameFinished(metadata);
         }
+
+        return;
     }
 
-    qDebug() << "metadata: " << dataReceived << "\n";
+    resetData();
 }

@@ -9,6 +9,8 @@ import br.uni.hangman
 // button on the right to the owner of the room
 Item {
     id: roomItem
+
+    required property bool isCreator
     property alias messagesModel: messagesListView.model
 
     ColumnLayout {
@@ -33,8 +35,12 @@ Item {
 
             delegate: SwipeDelegate {
                 id: swipeDelegate
-                text: modelData
+
+                readonly property bool isLastIndex: index == playersListView.model.length - 1
+
+                text: modelData + (isLastIndex ? qsTr(" [creator]") : "")
                 width: playersListView.width
+                swipe.enabled: roomItem.isCreator && !isLastIndex
 
                 ListView.onRemove: SequentialAnimation {
                     PropertyAction {
@@ -55,7 +61,6 @@ Item {
                     }
                 }
 
-                // use delegatechooser to not allow last index to be deleted
                 swipe.right: Label {
                     id: deleteLabel
                     text: qsTr("Delete")
@@ -76,6 +81,7 @@ Item {
             }
         }
         Button {
+            visible: roomItem.isCreator
             Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true
             text: qsTr("Start Game!")
@@ -105,6 +111,7 @@ Item {
                 }
             }
             RowLayout {
+                id: sendMessageRowLayout
                 Layout.fillWidth: true
 
                 function sendMessageAndResetText() {
@@ -116,13 +123,13 @@ Item {
                     id: messageTextField
                     Layout.fillWidth: true
                     placeholderText: qsTr("Type your message...")
-                    onAccepted: sendMessageAndResetText()
+                    onAccepted: sendMessageRowLayout.sendMessageAndResetText()
                 }
 
                 ToolButton {
                     text: qsTr("Send")
                     enabled: messageTextField.text !== ""
-                    onClicked: sendMessageAndResetText()
+                    onClicked: sendMessageRowLayout.sendMessageAndResetText()
                 }
             }
         }

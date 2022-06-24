@@ -6,43 +6,46 @@ import br.uni.hangman
 Item {
     id: game
 
-    // TODO fix this, should be maximum amount of chances
     property int total_chances
-    // TODO have alongside the life the player name, then if multiples players are playing the users can know
-    // how much of life each other got
+
     ColumnLayout {
         anchors.fill: parent
-        // TODO implement multiple players
         Repeater {
-            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             model: Core.data.players
 
             Rectangle {
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
                 Layout.fillWidth: true
+                // maybe this rectangle should be outside repeater
                 Layout.fillHeight: true
                 color: "transparent"
 
                 RowLayout {
-                    anchors.fill: parent
+                    anchors.centerIn: parent
 
                     Label {
-                        Layout.alignment: Qt.AlignHCenter
+                        Layout.alignment: Qt.AlignVCenter | Qt.AlignTop
                         text: modelData.player
-                        font.bold: true
+                        font.bold: index === Core.data.current_player
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        horizontalAlignment: Text.AlignRight
+                        verticalAlignment: Text.AlignVCenter
                     }
 
                     Repeater {
                         id: lifeRepeater
-                        property int remaining_chances: modelData.remaining_chances
-                        // Layout.fillWidth: true
-                        // Layout.fillHeight: true
+
+                        readonly property int remaining_chances: modelData.remaining_chances
+
                         model: game.total_chances
 
                         Rectangle {
+                            Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
                             radius: 50
                             width: 30
                             height: 30
-                            color: index <= (lifeRepeater.remaining_chances - 1) ? "green" : "red"
+                            color: index <= (lifeRepeater.remaining_chances - 1) ? "grey" : "transparent"
                         }
                     }
                 }

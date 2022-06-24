@@ -83,7 +83,9 @@ ApplicationWindow {
 
         title: qsTr("Join a room")
         anchors.centerIn: Overlay.overlay
-        onAccepted: Core.selectRoom(roomListView.model[roomListView.currentIndex].uid);
+        width: parent.width * 0.5
+        height: parent.height * 0.5
+        onAccepted: Core.joinRoom(roomListView.currentItem.uid);
         footer: DialogButtonBox {
             Button {
                 text: qsTr("Join")
@@ -99,14 +101,24 @@ ApplicationWindow {
         ListView {
             id: roomListView
 
-            delegate: Rectangle {
-                width: parent.width
+            highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+            focus: true
+            model: ListModel {}
+            delegate: Item {
+
+                readonly property string uid: model.uid
+
+                width: roomListView.width
                 height: 50
-                border { color: "lightsteelblue"; width: 1}
-                color: ListView.isCurrentItem ? "black" : "red"
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: roomListView.currentIndex = index
+                }
+
                 Label {
                     anchors.fill: parent
-                    text: modelData.name + " " + "(" + modelData.difficulty + ")" + " " + modelData.current_count + "/" + modelData.max_players
+                    text: model.name + " (" + model.difficulty + ") " + model.current_count + "/" + model.max_players
                 }
             }
         }
@@ -196,14 +208,18 @@ ApplicationWindow {
     }
 
     Dialog {
-        id: genericGoHomeDialog
+        id: genericMessageDialog
 
-        // TODO solve warning
         property alias text: label.text
+        property bool backMainMenu: false
         anchors.centerIn: Overlay.overlay
         standardButtons: Dialog.Ok
+        implicitWidth: parent.width * 0.85
         onClosed: {
-            stack.pop(null);
+            if (backMainMenu)
+                stack.pop(null);
+
+            backMainMenu = false;
         }
 
         Label {
@@ -213,18 +229,27 @@ ApplicationWindow {
 
     Connections {
         function onRoomListChanged(room_list) {
-            roomListView.model = room_list;
-            roomListView.currentIndex = -1;
+            roomListView.model.clear();
+            for (let i = 0; i < room_list.length; i += 1) {
+                roomListView.model.append(room_list[i]);
+            }
             roomSelectorDialog.open();
         }
 
         function onRoomCreated(room) {
-            stack.push(roomComponent)
+            stack.push(roomComponent, { isCreator: true })
         }
 
         function onRoomChanged(room) {
             if (stack.depth == 1)
-                stack.push(roomComponent)
+                stack.push(roomComponent, { isCreator: false })
+        }
+
+        function onRoomDeleted() {
+            genericMessageDialog.title = qsTr("Going back to main menu")
+            genericMessageDialog.text = qsTr("The creator of the room has exited, thus deleting the room")
+            genericMessageDialog.backMainMenu = true;
+            genericMessageDialog.open()
         }
 
         function onRoomMessageReceived(messageObject) {
@@ -236,24 +261,27 @@ ApplicationWindow {
         }
 
         function onGameFinished(game) {
-            // TODO use message dialog
-            genericGoHomeDialog.title = qsTr("Hidden Word has been found!");
-            genericGoHomeDialog.text = qsTr("The secret word is \"") + Core.data.hidden_word.toUpperCase() + qsTr("\" and the winner is ") + Core.data.winner + "!";
-            genericGoHomeDialog.open()
+            genericMessageDialog.title = qsTr("Hidden Word has been found!");
+            genericMessageDialog.text = qsTr("The secret word is \"") + Core.data.hidden_word.toUpperCase() + qsTr("\" and the winner is ") + Core.data.winner + "!";
+            genericMessageDialog.backMainMenu = true;
+            genericMessageDialog.open()
         }
 
         function onPlayerEliminated() {
-            genericGoHomeDialog.title = qsTr("Game has ended");
-            genericGoHomeDialog.text = qsTr("You have lost, you do not have any more chances to guess")
-            genericGoHomeDialog.open()
+            genericMessageDialog.title = qsTr("You have lost you chances");
+            genericMessageDialog.text = qsTr("You do not have chances anymore to guess letters and words")
+            genericMessageDialog.backMainMenu = true;
+            genericMessageDialog.open()
+        }
+
+        function onErrorHappened(errorString) {
+            genericMessageDialog.title = qsTr("An error happened");
+            genericMessageDialog.text = qsTr("Error, ") + errorString;
+            genericMessageDialog.open()
         }
 
         function onPlayerCreated(name) {
             playerCreationDialog.close();
-        }
-
-        function onErrorHappened(errorString) {
-
         }
 
         target: Core
