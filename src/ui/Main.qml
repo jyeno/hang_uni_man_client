@@ -66,7 +66,11 @@ ApplicationWindow {
                 text: qsTr("Help")
                 anchors.right: parent.right
                 anchors.top: parent.top
-                // TODO help
+                onClicked: {
+                    genericMessageDialog.title = qsTr("Help");
+                    genericMessageDialog.text = qsTr("You have two have two ways to play the game:\n\n * Single player - play solo, trying to find the hidden word\n\n * Multiplayer - matchmaking you and others players, when the game start you will have to find the hidden word. Until the current player guess wrong, he will continue to be able to guess meanwhile others players will be waiting theirs time.\n\nMade by Jean Lima Andrade, Vitor Emanuel, Lucas Fonseca and Renan Souza for the network evaluation work.");
+                    genericMessageDialog.open()
+                }
             }
         }
     }
@@ -225,6 +229,8 @@ ApplicationWindow {
         property bool backMainMenu: false
         anchors.centerIn: Overlay.overlay
         standardButtons: Dialog.Ok
+        closePolicy: Popup.NoAutoClose
+        modal: true
         implicitWidth: parent.width * 0.85
         onClosed: {
             if (backMainMenu)
@@ -235,6 +241,8 @@ ApplicationWindow {
 
         Label {
             id: label
+            anchors.fill: parent
+            wrapMode: Text.WordWrap
         }
     }
 
