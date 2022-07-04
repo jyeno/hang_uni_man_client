@@ -78,6 +78,10 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
+    ListModel {
+        id: roomListModel
+    }
+
     Dialog {
         id: roomSelectorDialog
 
@@ -85,11 +89,13 @@ ApplicationWindow {
         anchors.centerIn: Overlay.overlay
         width: parent.width * 0.5
         height: parent.height * 0.5
+        modal: true
+        closePolicy: Popup.NoAutoClose
         onAccepted: Core.joinRoom(roomListView.currentItem.uid);
         footer: DialogButtonBox {
             Button {
                 text: qsTr("Join")
-                enabled: roomListView.currentIndex !== -1
+                enabled: roomListView.currentIndex !== -1 && (roomListView.currentItem.isAvailable ?? falses)
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
             }
             Button {
@@ -101,12 +107,15 @@ ApplicationWindow {
         ListView {
             id: roomListView
 
+            anchors.fill: parent
+            clip: true
             highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
             focus: true
-            model: ListModel {}
+            model: roomListModel
             delegate: Item {
 
                 readonly property string uid: model.uid
+                readonly property bool isAvailable: model.current_count < model.max_players
 
                 width: roomListView.width
                 height: 50
@@ -118,6 +127,8 @@ ApplicationWindow {
 
                 Label {
                     anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                     text: model.name + " (" + model.difficulty + ") " + model.current_count + "/" + model.max_players
                 }
             }
@@ -229,10 +240,12 @@ ApplicationWindow {
 
     Connections {
         function onRoomListChanged(room_list) {
-            roomListView.model.clear();
+            roomListModel.clear();
+            console.log("list: " + room_list.length);
             for (let i = 0; i < room_list.length; i += 1) {
-                roomListView.model.append(room_list[i]);
+                roomListModel.append(room_list[i]);
             }
+            console.log("list: " + roomListView.model.count);
             roomSelectorDialog.open();
         }
 

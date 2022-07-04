@@ -62,6 +62,7 @@ Item {
 
         Keyboard {
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
         }
     }
 

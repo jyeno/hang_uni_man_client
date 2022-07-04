@@ -3,10 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import br.uni.hangman
 
-// needs for this screen
-// user feedback on who is on it
-// messages
-// button on the right to the owner of the room
 Item {
     id: roomItem
 
